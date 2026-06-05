@@ -1,0 +1,18 @@
+from flask import Flask
+import random
+
+app = Flask(__name__)
+
+factos = ["Según un estudio realizado en 2018, más del 50% de las personas de entre 18 y 34 años se consideran dependientes de sus smartphones.",
+          "Según un estudio de 2019, más del 60% de las personas responden a mensajes de trabajo en sus smartphones en los 15 minutos siguientes a salir del trabajo.",
+          "Elon Musk afirma que las redes sociales están diseñadas para mantenernos dentro de la plataforma, para que pasemos el mayor tiempo posible viendo contenidos"]
+
+@app.route("/")
+def home():
+    return f'<a href="/random_facts">¡Ver un dato aleatorio!</a>'
+
+@app.route("/random_facts")
+def facts():
+    return f"<p>{random.choice(factos)}</p>"
+
+app.run(debug = True)
