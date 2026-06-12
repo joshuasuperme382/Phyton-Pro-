@@ -1,67 +1,83 @@
-# Importar
-from flask import Flask, render_template, request
+# Import
+from flask import Flask, render_template,request, redirect
+# Importing the database library
+from flask_sqlalchemy import SQLAlchemy
 
 
 app = Flask(__name__)
+# Connecting SQLite
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///diary.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+# Creating a DB
+db = SQLAlchemy(app )
 
-def result_calculate(size, lights, device):
-    # Variables que permiten calcular el consumo energético de los aparatos
-    home_coef = 100
-    light_coef = 0.04
-    devices_coef = 5   
-    return size * home_coef + lights * light_coef + device * devices_coef 
+#Assignment #1. Create a DB table
+class Card(db.Model):
+    # id
+    id = db.Column(db.Integer, primary_key=True)
+    # Título
+    title = db.Column(db.String(100), nullable=False)
+    # Descripción
+    subtitle = db.Column(db.String(300), nullable=False)
+    # Texto
+    text = db.Column(db.Text, nullable=False)
 
-# La primera página
+
+
+
+
+
+
+
+
+
+# Running the page with content
 @app.route('/')
 def index():
-    return render_template('index.html')
-# Segunda página
-@app.route('/<size>')
-def lights(size):
-    return render_template(
-                            'lights.html', 
-                            size=size
+    # Displaying the DB objects
+    # Assignment #2. Display the objects from the DB in index.html
+    cards = Card.query.order_by(Card.id).all()
+    
+
+    return render_template('index.html',
+                           cards = cards
+
                            )
 
-# La tercera página
-@app.route('/<size>/<lights>')
-def electronics(size, lights):
-    return render_template(
-                            'electronics.html',                           
-                            size = size, 
-                            lights = lights                           
-                           )
+# Running the page with the card
+@app.route('/card/<int:id>')
+def card(id):
+    # Assignment #2. Display the right card by its id
+    card = Card.query.get(id)
 
-# Cálculo
-@app.route('/<size>/<lights>/<device>')
-def end(size, lights, device):
-    return render_template('end.html', 
-                            result=result_calculate(int(size),
-                                                    int(lights), 
-                                                    int(device)
-                                                    )
-                        )
-# El formulario
-@app.route('/form')
-def form():
-    return render_template('form.html')
+    return render_template('card.html', card=card)
 
-#Resultados del formulario
-@app.route('/submit', methods=['POST'])
-def submit_form():
-    # Declarar variables para la recogida de datos
-    name = request.form['name']
-    email = request.form['email']
-    address = request.form['address']
-    date = request.form['date']
+# Running the page and creating the card
+@app.route('/create')
+def create():
+    return render_template('create_card.html')
 
-    # Puedes guardar tus datos o enviarlos por correo electrónico
-    return render_template('form_result.html', 
-                           # Coloque aquí las variables
-                           name=name,
-                           email=email,
-                           address=address,
-                           date=date
-                           )
+# The card form
+@app.route('/form_create', methods=['GET','POST'])
+def form_create():
+    if request.method == 'POST':
+        title =  request.form['title']
+        subtitle =  request.form['subtitle']
+        text =  request.form['text']
 
-app.run(debug=True)
+        # Assignment #2. Create a way to store data in the DB
+        card = Card(title= title, subtitle =subtitle, text = text)
+        db.session.add(card)
+        db.session.commit()
+        
+
+
+
+
+        return redirect('/')
+    else:
+        return render_template('create_card.html')
+
+
+if __name__ == "__main__":
+    app.run(debug=True)
